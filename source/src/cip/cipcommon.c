@@ -367,7 +367,7 @@ CipAttributeStruct *GetCipAttribute(const CipInstance *const instance,
                                     const EipUint16 attribute_number) {
 
   CipAttributeStruct *attribute = instance->attributes; /* init pointer to array of attributes*/
-  for (int i = 0; i < instance->cip_class->number_of_attributes; i++) {
+  for (size_t i = 0; i < instance->cip_class->number_of_attributes; i++) {
     if (attribute_number == attribute->attribute_number) {
       return attribute;
     } else {

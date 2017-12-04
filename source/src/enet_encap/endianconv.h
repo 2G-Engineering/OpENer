@@ -7,6 +7,7 @@
 #define OPENER_ENDIANCONV_H_
 
 #include "typedefs.h"
+#include "ciptypes.h"
 
 /** @file endianconv.h
  * @brief Responsible for Endianess conversion
@@ -50,7 +51,10 @@ CipWord GetWordFromMessage(const CipOctet **const buffer_address);
 EipUint32 GetDintFromMessage(const EipUint8 **const buffer);
 
 CipUdint GetUdintFromMessage(const CipOctet **const buffer_address);
+CipUdint GetUdintFromMessageTcpIp(const CipOctet **const buffer_address);
 
+void GetCipStringFromMessageToLocation(const CipOctet **const buffer_address,
+                                       CipString *cip_string);
 /** @ingroup ENCAP
  *
  * @brief converts UINT8 data from host to little endian an writes it to buffer.
@@ -125,7 +129,7 @@ void DetermineEndianess(void);
 int GetEndianess(void);
 
 void MoveMessageNOctets(int n,
-                        const CipOctet **message_runner);
+                        CipOctet **message_runner);
 
 int FillNextNMessageOctetsWith(CipOctet value,
                                unsigned int n,

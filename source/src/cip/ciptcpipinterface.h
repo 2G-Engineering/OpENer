@@ -57,4 +57,7 @@ void ShutdownTcpIpInterface(void);
  */
 EipUint16 GetEncapsulationInactivityTimeout(CipInstance *instance);
 
+void setIPv4(
+  );
+char *convertIpUdintToString(CipUdint address);
 #endif /* OPENER_CIPTCPIPINTERFACE_H_ */

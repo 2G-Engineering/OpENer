@@ -95,6 +95,37 @@ CipUdint GetUdintFromMessage(const CipOctet **const buffer_address) {
   return data;
 }
 
+CipUdint GetUdintFromMessageTcpIp(const CipOctet **const buffer_address) {
+  const CipOctet *buffer = *buffer_address;
+
+  CipUdint data = buffer[3] | buffer[2] << 8 | buffer[1] << 16
+                  | buffer[0] << 24;
+  *buffer_address += 4;
+  return data;
+}
+
+void GetCipStringFromMessageToLocation(const CipOctet **const buffer_address,
+                                       CipString *cip_string) {
+  const CipOctet *buffer = *buffer_address;
+  size_t length = buffer[0] | buffer[1] << 8;
+  *buffer_address += 2;
+  buffer += 2;
+  CipString *temp_cip_string = CipCalloc( 1, sizeof(CipString) );
+  temp_cip_string->length = length;
+  CipByte *string = CipCalloc( length, sizeof(CipByte) );
+  temp_cip_string->string = string;
+  for (int i = 0; i < length; i++) {
+    OPENER_TRACE_INFO("==============================%c\n", buffer[i]);
+    temp_cip_string->string[i] = buffer[i];
+  }
+
+  *buffer_address += length;
+  *cip_string = *temp_cip_string;
+
+  CipFree(temp_cip_string);
+
+}
+
 /**
  * @brief converts UINT8 data from host to little endian an writes it to buffer.
  * @param data value to be written
@@ -256,7 +287,7 @@ int GetEndianess() {
 }
 
 void MoveMessageNOctets(int amount_of_bytes_moved,
-                        const CipOctet **message_runner) {
+                        CipOctet **message_runner) {
   (*message_runner) += amount_of_bytes_moved;
 }
 
@@ -271,7 +302,7 @@ int FillNextNMessageOctetsWithValueAndMoveToNextPosition(CipOctet value,
                                                          unsigned int amount_of_filled_bytes,
                                                          CipOctet **message) {
   FillNextNMessageOctetsWith(value, amount_of_filled_bytes, message);
-  MoveMessageNOctets(amount_of_filled_bytes, (const CipOctet **)message);
+  MoveMessageNOctets(amount_of_filled_bytes, message);
   return amount_of_filled_bytes;
 }
 
