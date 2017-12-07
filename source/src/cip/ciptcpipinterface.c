@@ -142,7 +142,6 @@ EipStatus SetAttributeSingleTcp(
           name_server_2 = GetUdintFromMessageTcpIp(
             &(message_router_request->data) );
 
-
           OPENER_TRACE_INFO(" setAttribute %d\n", attribute_number);
 
           if (attribute->data != NULL) {
@@ -454,8 +453,8 @@ EipStatus setIPv4(CipUdint ip,
 
   struct sockaddr_in *addr = (struct sockaddr_in *) &ifr.ifr_addr;
 
-  convertIpUdintToString(ip,temp_string,0);
-  if(temp_string==NULL) {
+  convertIpUdintToString(ip, temp_string, 0);
+  if (temp_string == NULL) {
     return kEipStatusError;
   }
   if (strcmp(temp_string, "127.0.0.1") == 0) {
@@ -463,27 +462,26 @@ EipStatus setIPv4(CipUdint ip,
   }
   inet_pton(AF_INET, temp_string, &addr->sin_addr);
 
-
   return_value = ioctl(fd, SIOCSIFADDR, &ifr);
-  if(return_value!= 0) {
+  if (return_value != 0) {
     return kEipStatusError;
   }
 
-  convertIpUdintToString(subnet_mask,temp_string,1);
+  convertIpUdintToString(subnet_mask, temp_string, 1);
   struct sockaddr_in *subnet = (struct sockaddr_in *) &ifr.ifr_netmask;
   inet_pton(AF_INET, temp_string, &subnet->sin_addr);
   return_value = ioctl(fd, SIOCSIFNETMASK, &ifr);
-  if(return_value!= 0) {
+  if (return_value != 0) {
     return kEipStatusError;
   }
 
-  if(ioctl(fd, SIOCGIFFLAGS, &ifr) != 0) {
+  if (ioctl(fd, SIOCGIFFLAGS, &ifr) != 0) {
     return kEipStatusError;
   }
   strncpy(ifr.ifr_name, name, IFNAMSIZ);
   ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
 
-  if(ioctl(fd, SIOCSIFFLAGS, &ifr) != 0) {
+  if (ioctl(fd, SIOCSIFFLAGS, &ifr) != 0) {
     return kEipStatusError;
   }
 
@@ -504,12 +502,10 @@ void convertIpUdintToString(CipUdint address,
   char str4[4];
   sprintf(str4, "%d", ptr[3]);
 
-  if( (strcmp(str4,
-              "0")==0 ||
-       strcmp(str4,"000")==0 || strcmp(str4,"00")==0) && !subnet ) {
+  if ( (strcmp(str4, "0") == 0 || strcmp(str4, "000") == 0
+        || strcmp(str4, "00") == 0) && !subnet ) {
     temp_string = NULL;
-  }
-  else{
+  } else {
     strcat(str1, ".");
     strcat(str1, str2);
     strcat(str1, ".");
@@ -517,7 +513,7 @@ void convertIpUdintToString(CipUdint address,
     strcat(str1, ".");
     strcat(str1, str4);
 
-    strcpy(temp_string,str1);
+    strcpy(temp_string, str1);
   }
 }
 
