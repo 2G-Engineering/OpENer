@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <linux/if.h>
+#include <stdio.h>
 
 CipDword tcp_status_ = 0x1; /**< #1  TCP status with 1 we indicate that we got a valid configuration from DHCP or BOOTP */
 CipDword configuration_capability_ = 20; /**< #2  This is a default value meaning that it is a DHCP client see 5-3.2.2.2 EIP specification*/
@@ -140,20 +141,25 @@ EipStatus SetAttributeSingleTcp(
             &(message_router_request->data) );
           name_server_2 = GetUdintFromMessageTcpIp(
             &(message_router_request->data) );
-          GetCipStringFromMessageToLocation(
-            &(message_router_request->data),
-            &(interface_configuration_.domain_name) );
+
 
           OPENER_TRACE_INFO(" setAttribute %d\n", attribute_number);
 
           if (attribute->data != NULL) {
-            interface_configuration_.ip_address = ip;
-            interface_configuration_.network_mask = network_mask;
-            interface_configuration_.gateway = gateway;
-            interface_configuration_.name_server = name_server;
-            interface_configuration_.name_server_2 = name_server_2;
-            message_router_response->general_status = kCipErrorSuccess;
-            setIPv4();
+            if ( kEipStatusOk == setIPv4(ip, network_mask) ) {
+              interface_configuration_.ip_address = ip;
+              interface_configuration_.network_mask = network_mask;
+              interface_configuration_.gateway = gateway;
+              interface_configuration_.name_server = name_server;
+              interface_configuration_.name_server_2 = name_server_2;
+              GetCipStringFromMessageToLocation(
+                &(message_router_request->data),
+                &(interface_configuration_.domain_name) );
+              message_router_response->general_status = kCipErrorSuccess;
+            } else {
+              message_router_response->general_status =
+                kCipErrorInvalidAttributeValue;
+            }
           } else {
             message_router_response->general_status = kCipErrorNotEnoughData;
 
@@ -433,8 +439,9 @@ EipUint16 GetEncapsulationInactivityTimeout(CipInstance *instance) {
   return encapsulation_inactivity_timeout;
 }
 
-void setIPv4() {
-
+EipStatus setIPv4(CipUdint ip,
+                  CipUdint subnet_mask) {
+  EipStatus return_value = kEipStatusOk;
   struct ifreq ifr;
   const char *name = "eth1";
   int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
@@ -443,28 +450,49 @@ void setIPv4() {
 
   ifr.ifr_addr.sa_family = AF_INET;
 
+  char temp_string[100];
+
   struct sockaddr_in *addr = (struct sockaddr_in *) &ifr.ifr_addr;
 
-  inet_pton(AF_INET,
-            convertIpUdintToString(interface_configuration_.ip_address),
-            &addr->sin_addr);
-  ioctl(fd, SIOCSIFADDR, &ifr);
+  convertIpUdintToString(ip,temp_string,0);
+  if(temp_string==NULL) {
+    return kEipStatusError;
+  }
+  if (strcmp(temp_string, "127.0.0.1") == 0) {
+    return kEipStatusError;
+  }
+  inet_pton(AF_INET, temp_string, &addr->sin_addr);
 
+
+  return_value = ioctl(fd, SIOCSIFADDR, &ifr);
+  if(return_value!= 0) {
+    return kEipStatusError;
+  }
+
+  convertIpUdintToString(subnet_mask,temp_string,1);
   struct sockaddr_in *subnet = (struct sockaddr_in *) &ifr.ifr_netmask;
-  inet_pton(AF_INET,
-            convertIpUdintToString(interface_configuration_.network_mask),
-            &subnet->sin_addr);
-  ioctl(fd, SIOCSIFNETMASK, &ifr);
+  inet_pton(AF_INET, temp_string, &subnet->sin_addr);
+  return_value = ioctl(fd, SIOCSIFNETMASK, &ifr);
+  if(return_value!= 0) {
+    return kEipStatusError;
+  }
 
-  ioctl(fd, SIOCGIFFLAGS, &ifr);
+  if(ioctl(fd, SIOCGIFFLAGS, &ifr) != 0) {
+    return kEipStatusError;
+  }
   strncpy(ifr.ifr_name, name, IFNAMSIZ);
   ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
 
-  ioctl(fd, SIOCSIFFLAGS, &ifr);
+  if(ioctl(fd, SIOCSIFFLAGS, &ifr) != 0) {
+    return kEipStatusError;
+  }
 
+  return return_value;
 }
 
-char *convertIpUdintToString(CipUdint address) {
+void convertIpUdintToString(CipUdint address,
+                            char *temp_string,
+                            CipBool subnet) {
   CipOctet *ptr = &(address);
 
   char str1[100];
@@ -476,11 +504,20 @@ char *convertIpUdintToString(CipUdint address) {
   char str4[4];
   sprintf(str4, "%d", ptr[3]);
 
-  strcat(str1, ".");
-  strcat(str1, str2);
-  strcat(str1, ".");
-  strcat(str1, str3);
-  strcat(str1, ".");
-  strcat(str1, str4);
+  if( (strcmp(str4,
+              "0")==0 ||
+       strcmp(str4,"000")==0 || strcmp(str4,"00")==0) && !subnet ) {
+    temp_string = NULL;
+  }
+  else{
+    strcat(str1, ".");
+    strcat(str1, str2);
+    strcat(str1, ".");
+    strcat(str1, str3);
+    strcat(str1, ".");
+    strcat(str1, str4);
+
+    strcpy(temp_string,str1);
+  }
 }
 
