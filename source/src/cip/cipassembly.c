@@ -151,10 +151,11 @@ EipStatus SetAssemblyAttributeSingle(
     if (attribute->data != NULL) {
       CipByteArray *data = (CipByteArray *) attribute->data;
 
-      /* TODO: check for ATTRIBUTE_SET/GETABLE MASK */
       if ( true == IsConnectedOutputAssembly(instance->instance_number) ) {
         OPENER_TRACE_WARN(
           "Assembly AssemblyAttributeSingle: received data for connected output assembly\n\r");
+        message_router_response->general_status = kCipErrorAttributeNotSetable;
+      } else if (!(attribute->attribute_flags & kSetable)) {/* check if attribute is setable */
         message_router_response->general_status = kCipErrorAttributeNotSetable;
       } else {
         if (message_router_request->request_path_size < data->length) {
@@ -167,6 +168,7 @@ EipStatus SetAssemblyAttributeSingle(
               "Assembly setAssemblyAttributeSingle: too much data received.\r\n");
             message_router_response->general_status = kCipErrorTooMuchData;
           } else {
+            /* perform the data copy if there are no objections */
             memcpy(data->data, router_request_data, data->length);
 
             if (AfterAssemblyDataReceived(instance) != kEipStatusOk) {
