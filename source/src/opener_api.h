@@ -287,6 +287,7 @@ int DecodeData(const EipUint8 cip_type,
  * @param instance_number  instance number of the assembly object to create
  * @param data         pointer to the data the assembly object should contain
  * @param data_length   length of the assembly object's data
+ * @param read_only     if true, the created object will be read-only
  * @return pointer to the instance of the created assembly object. NULL on error
  *
  * Assembly Objects for Configuration Data:
@@ -300,7 +301,7 @@ int DecodeData(const EipUint8 cip_type,
  */
 CipInstance *CreateAssemblyObject(const EipUint32 instance_number,
                                   EipByte *const data,
-                                  const EipUint16 data_length);
+                                  const EipUint16 data_length, bool read_only);
 
 typedef struct cip_connection_object CipConnectionObject;
 

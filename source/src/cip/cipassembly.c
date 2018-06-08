@@ -76,7 +76,7 @@ void ShutdownAssemblies(void) {
 
 CipInstance *CreateAssemblyObject(const EipUint32 instance_id,
                                   EipByte *const data,
-                                  const EipUint16 data_length) {
+                                  const EipUint16 data_length, bool read_only) {
   CipClass *assembly_class = NULL;
   if ( NULL == ( assembly_class = GetCipClass(kCipAssemblyClassCode) ) ) {
     if ( NULL == ( assembly_class = CreateAssemblyClass() ) ) {
@@ -94,8 +94,13 @@ CipInstance *CreateAssemblyObject(const EipUint32 instance_id,
 
   assembly_byte_array->length = data_length;
   assembly_byte_array->data = data;
-  InsertAttribute(instance, 3, kCipByteArray, assembly_byte_array,
-                  kSetAndGetAble);
+  if (read_only) {
+    InsertAttribute(instance, 3, kCipByteArray, assembly_byte_array,
+        kGetableSingleAndAll);
+  } else {
+    InsertAttribute(instance, 3, kCipByteArray, assembly_byte_array,
+                    kSetAndGetAble);
+  }
   /* Attribute 4 Number of bytes in Attribute 3 */
   InsertAttribute(instance, 4, kCipUint, &(assembly_byte_array->length),
                   kGetableSingle);
