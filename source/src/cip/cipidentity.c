@@ -130,7 +130,7 @@ void InitializeCipIdentiy(CipClass *class) {
   InsertAttribute( (CipInstance *) class, 2, kCipUint,
                    (void *) &class->number_of_instances, kGetableSingleAndAll ); /*  largest instance number */
   InsertAttribute( (CipInstance *) class, 3, kCipUint,
-                   (void *) &class->number_of_instances, kGetAttributeSingle ); /* number of instances currently existing*/
+                   (void *) &class->number_of_instances, kGetableSingleAndAll ); /* number of instances currently existing*/
   InsertAttribute( (CipInstance *) class, 4, kCipUint, (void *) &kCipUintZero,
                    kNotSetOrGetable ); /* optional attribute list - default = 0 */
   InsertAttribute( (CipInstance *) class, 5, kCipUint, (void *) &kCipUintZero,
