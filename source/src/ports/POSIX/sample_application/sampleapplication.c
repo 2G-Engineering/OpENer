@@ -31,25 +31,25 @@ EipStatus ApplicationInitialization(void) {
   /* create 3 assembly object instances*/
   /*INPUT*/
   CreateAssemblyObject( DEMO_APP_INPUT_ASSEMBLY_NUM, g_assembly_data064,
-                        sizeof(g_assembly_data064) );
+                        sizeof(g_assembly_data064), true);
 
   /*OUTPUT*/
   CreateAssemblyObject( DEMO_APP_OUTPUT_ASSEMBLY_NUM, g_assembly_data096,
-                        sizeof(g_assembly_data096) );
+                        sizeof(g_assembly_data096), false);
 
   /*CONFIG*/
   CreateAssemblyObject( DEMO_APP_CONFIG_ASSEMBLY_NUM, g_assembly_data097,
-                        sizeof(g_assembly_data097) );
+                        sizeof(g_assembly_data097), false);
 
   /*Heart-beat output assembly for Input only connections */
-  CreateAssemblyObject(DEMO_APP_HEARTBEAT_INPUT_ONLY_ASSEMBLY_NUM, NULL, 0);
+  CreateAssemblyObject(DEMO_APP_HEARTBEAT_INPUT_ONLY_ASSEMBLY_NUM, NULL, 0, false);
 
   /*Heart-beat output assembly for Listen only connections */
-  CreateAssemblyObject(DEMO_APP_HEARTBEAT_LISTEN_ONLY_ASSEMBLY_NUM, NULL, 0);
+  CreateAssemblyObject(DEMO_APP_HEARTBEAT_LISTEN_ONLY_ASSEMBLY_NUM, NULL, 0, false);
 
   /* assembly for explicit messaging */
   CreateAssemblyObject( DEMO_APP_EXPLICT_ASSEMBLY_NUM, g_assembly_data09A,
-                        sizeof(g_assembly_data09A) );
+                        sizeof(g_assembly_data09A), false);
 
   ConfigureExclusiveOwnerConnectionPoint(0, DEMO_APP_OUTPUT_ASSEMBLY_NUM,
                                          DEMO_APP_INPUT_ASSEMBLY_NUM,
