@@ -99,6 +99,16 @@ static const int kOpenerConsumedDataHasRunIdleHeader = 1;
  */
 static const int kOpenerProducedDataHasRunIdleHeader = 0;
 
+/** @brief Define in order to define the CIP identity object as a const struct
+ * rather than as a normal CIP object in RAM.
+ *
+ * Putting this object in ROM will save several KB of RAM which may be significant
+ * in small systems.
+ *
+ */
+
+//#define OPENER_CIP_CONST_IDENTITY 1
+
 #ifdef OPENER_WITH_TRACES
 /* If we have tracing enabled provide print tracing macro */
 #include <stdio.h>

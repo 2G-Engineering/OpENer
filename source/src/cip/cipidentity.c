@@ -37,15 +37,18 @@
 
 /* attributes in CIP Identity Object */
 
+#ifndef OPENER_CIP_CONST_IDENTITY
 EipUint16 vendor_id_ = OPENER_DEVICE_VENDOR_ID; /**< Attribute 1: Vendor ID */
 EipUint16 device_type_ = OPENER_DEVICE_TYPE; /**< Attribute 2: Device Type */
 EipUint16 product_code_ = OPENER_DEVICE_PRODUCT_CODE; /**< Attribute 3: Product Code */
 CipRevision revision_ = { OPENER_DEVICE_MAJOR_REVISION,
                           OPENER_DEVICE_MINOR_REVISION }; /**< Attribute 4: Revision / USINT Major, USINT Minor */
-EipUint16 status_ = 0; /**< Attribute 5: Status */
-EipUint32 serial_number_ = 0; /**< Attribute 6: Serial Number, has to be set prior to OpENer initialization */
 CipShortString product_name_ = { sizeof(OPENER_DEVICE_NAME) - 1,
                                  OPENER_DEVICE_NAME }; /**< Attribute 7: Product Name */
+#endif
+EipUint16 status_ = 0; /**< Attribute 5: Status */
+EipUint32 serial_number_ = 0; /**< Attribute 6: Serial Number, has to be set prior to OpENer initialization */
+
 
 /** Private functions, sets the devices serial number
  * @param serial_number The serial number of the device
@@ -68,7 +71,7 @@ void SetDeviceStatus(const EipUint16 status) {
  * @param message_router_response
  * @returns Currently always kEipOkSend is returned
  */
-static EipStatus Reset(CipInstance *instance,
+EipStatus IdnReset(CipInstance *instance,
 /* pointer to instance*/
                        CipMessageRouterRequest *message_router_request,
                        /* pointer to message router request*/
@@ -118,7 +121,7 @@ static EipStatus Reset(CipInstance *instance,
   message_router_response->data_length = 0;
   return eip_status;
 }
-
+#ifndef OPENER_CIP_CONST_IDENTITY
 void InitializeCipIdentiy(CipClass *class) {
 
 
@@ -175,7 +178,8 @@ EipStatus CipIdentityInit() {
   InsertService(class, kGetAttributeSingle, &GetAttributeSingle,
                 "GetAttributeSingle");
   InsertService(class, kGetAttributeAll, &GetAttributeAll, "GetAttributeAll");
-  InsertService(class, kReset, &Reset, "Reset");
+  InsertService(class, kReset, &IdnReset, "Reset");
 
   return kEipStatusOk;
 }
+#endif

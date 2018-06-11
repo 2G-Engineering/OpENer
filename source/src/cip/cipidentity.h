@@ -9,7 +9,8 @@
 #include "typedefs.h"
 #include "ciptypes.h"
 
-static const int kIdentityClassCode = 0x01;
+#define kIdentityClassCodeDef   0x01
+static const int kIdentityClassCode = kIdentityClassCodeDef;
 
 /** @brief Status of the CIP Identity object */
 typedef enum {
@@ -49,5 +50,13 @@ typedef enum {
  * @returns kEipStatusError if the class could not be created, otherwise kEipStatusOk
  */
 EipStatus CipIdentityInit(void);
+
+EipStatus IdnReset(CipInstance *instance,
+/* pointer to instance*/
+                       CipMessageRouterRequest *message_router_request,
+                       /* pointer to message router request*/
+                       CipMessageRouterResponse *message_router_response,  /* pointer to message router response*/
+                       struct sockaddr *originator_address,
+                       const int encapsulation_session);
 
 #endif /* OPENER_CIPIDENTITY_H_ */
