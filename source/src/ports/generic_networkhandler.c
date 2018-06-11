@@ -77,12 +77,14 @@ EipStatus NetworkHandlerInitialize(void) {
   if ( ( g_network_status.tcp_listener =
            socket(AF_INET, SOCK_STREAM, IPPROTO_TCP) )
        == -1 ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("error allocating socket stream listener, %d - %s\n",
                      error_code,
                      error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
@@ -107,6 +109,7 @@ EipStatus NetworkHandlerInitialize(void) {
                                                                  SOCK_DGRAM,
                                                                  IPPROTO_UDP) )
        == -1 ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR(
@@ -114,6 +117,7 @@ EipStatus NetworkHandlerInitialize(void) {
       error_code,
       error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
@@ -121,11 +125,13 @@ EipStatus NetworkHandlerInitialize(void) {
   if ( ( g_network_status.udp_unicast_listener = socket(AF_INET, SOCK_DGRAM,
                                                         IPPROTO_UDP) ) ==
        -1 ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("error allocating UDP unicast listener socket, %d - %s\n",
                      error_code, error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
@@ -169,23 +175,26 @@ EipStatus NetworkHandlerInitialize(void) {
   /* bind the new socket to port 0xAF12 (CIP) */
   if ( ( bind( g_network_status.tcp_listener, (struct sockaddr *) &my_address,
                sizeof(struct sockaddr) ) ) == -1 ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("error with TCP bind: %d - %s\n", error_code,
                      error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
   if ( ( bind( g_network_status.udp_unicast_listener,
                (struct sockaddr *) &my_address,
                sizeof(struct sockaddr) ) ) == -1 ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR( "error with UDP unicast bind: %d - %s\n", error_code,
-                      GetErrorMessage(
-                        error_code) );
+                      error_message );
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
@@ -200,36 +209,42 @@ EipStatus NetworkHandlerInitialize(void) {
        > setsockopt( g_network_status.udp_global_broadcast_listener, SOL_SOCKET,
                      SO_BROADCAST,
                      (char *) &set_socket_option_value, sizeof(int) ) ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR(
       "error with setting broadcast receive for UDP socket: %d - %s\n",
       error_code, error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
   if ( ( bind( g_network_status.udp_global_broadcast_listener,
                (struct sockaddr *) &global_broadcast_address,
                sizeof(struct sockaddr) ) ) == -1 ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("error with global broadcast UDP bind: %d - %s\n",
                      error_code,
                      error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
   /* switch socket in listen mode */
   if ( ( listen(g_network_status.tcp_listener,
                 MAX_NO_OF_TCP_SOCKETS) ) == -1 ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("networkhandler: error with listen: %d - %s\n",
                      error_code,
                      error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
@@ -294,15 +309,18 @@ void CheckAndHandleTcpListenerSocket(void) {
 
     new_socket = accept(g_network_status.tcp_listener, NULL, NULL);
     if (new_socket == kEipInvalidSocket) {
+#ifdef OPENER_WITH_TRACES
       int error_code = GetSocketErrorNumber();
       char *error_message = GetErrorMessage(error_code);
       OPENER_TRACE_ERR("networkhandler: error on accept: %d - %s\n",
                        error_code, error_message);
       FreeErrorMessage(error_message);
+#endif
       return;
     }
 
     if (SetQosOnSocket( new_socket, GetPriorityForSocket(0xFFF) ) <= 0) { /* got error */
+#ifdef OPENER_WITH_TRACES
       int error_code = GetSocketErrorNumber();
       char *error_message = GetErrorMessage(error_code);
       OPENER_TRACE_ERR(
@@ -311,6 +329,7 @@ void CheckAndHandleTcpListenerSocket(void) {
         error_code,
         error_message);
       FreeErrorMessage(error_message);
+#endif
     }
 
     OPENER_TRACE_INFO(">>> network handler: accepting new TCP socket: %d \n",
@@ -359,12 +378,14 @@ EipStatus NetworkHandlerProcessOnce(void) {
     {
       return kEipStatusOk;
     } else {
+#ifdef OPENER_WITH_TRACES
       int error_code = GetSocketErrorNumber();
       char *error_message = GetErrorMessage(error_code);
       OPENER_TRACE_ERR("networkhandler: error with select: %d - %s\n",
                        error_code,
                        error_message);
       FreeErrorMessage(error_message);
+#endif
       return kEipStatusError;
     }
   }
@@ -439,6 +460,7 @@ void CheckAndHandleUdpGlobalBroadcastSocket(void) {
                                  &from_address_length);
 
     if (received_size <= 0) { /* got error */
+#ifdef OPENER_WITH_TRACES
       int error_code = GetSocketErrorNumber();
       char *error_message = GetErrorMessage(error_code);
       OPENER_TRACE_ERR(
@@ -446,6 +468,7 @@ void CheckAndHandleUdpGlobalBroadcastSocket(void) {
         error_code,
         error_message);
       FreeErrorMessage(error_message);
+#endif
       return;
     }
 
@@ -497,6 +520,7 @@ void CheckAndHandleUdpUnicastSocket(void) {
                                  &from_address_length);
 
     if (received_size <= 0) { /* got error */
+#ifdef OPENER_WITH_TRACES
       int error_code = GetSocketErrorNumber();
       char *error_message = GetErrorMessage(error_code);
       OPENER_TRACE_ERR(
@@ -504,6 +528,7 @@ void CheckAndHandleUdpUnicastSocket(void) {
         error_code,
         error_message);
       FreeErrorMessage(error_message);
+#endif
       return;
     }
 
@@ -544,6 +569,7 @@ EipStatus SendUdpData(struct sockaddr_in *address,
                             (struct sockaddr *) address, sizeof(*address) );
 
   if (sent_length < 0) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR(
@@ -551,6 +577,7 @@ EipStatus SendUdpData(struct sockaddr_in *address,
       error_code,
       error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
@@ -585,6 +612,7 @@ EipStatus HandleDataOnTcpSocket(int socket) {
     OPENER_NUMBER_OF_SUPPORTED_SESSIONS,
     socket);
   if (number_of_read_bytes == 0) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR(
@@ -593,6 +621,7 @@ EipStatus HandleDataOnTcpSocket(int socket) {
       error_code,
       error_message);
     FreeErrorMessage(error_message);
+#endif
     RemoveSocketTimerFromList(socket);
     RemoveSession(socket);
     return kEipStatusError;
@@ -602,11 +631,13 @@ EipStatus HandleDataOnTcpSocket(int socket) {
     if (OPENER_SOCKET_WOULD_BLOCK == error_code) {
       return kEipStatusOk;
     }
+#ifdef OPENER_WITH_TRACES
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("networkhandler: error on recv: %d - %s\n",
                      error_code,
                      error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
@@ -628,6 +659,7 @@ EipStatus HandleDataOnTcpSocket(int socket) {
 
       if (number_of_read_bytes == 0) /* got error or connection closed by client */
       {
+#ifdef OPENER_WITH_TRACES
         int error_code = GetSocketErrorNumber();
         char *error_message = GetErrorMessage(error_code);
         OPENER_TRACE_ERR(
@@ -636,19 +668,22 @@ EipStatus HandleDataOnTcpSocket(int socket) {
           error_code,
           error_message);
         FreeErrorMessage(error_message);
+#endif
         RemoveSocketTimerFromList(socket);
         return kEipStatusError;
       }
       if (number_of_read_bytes < 0) {
         int error_code = GetSocketErrorNumber();
-        char *error_message = GetErrorMessage(error_code);
         if (OPENER_SOCKET_WOULD_BLOCK == error_code) {
           return kEipStatusOk;
         }
+#ifdef OPENER_WITH_TRACES
+        char *error_message = GetErrorMessage(error_code);
         OPENER_TRACE_ERR("networkhandler: error on recv: %d - %s\n",
                          error_code,
                          error_message);
         FreeErrorMessage(error_message);
+#endif
         return kEipStatusError;
       }
       data_size -= number_of_read_bytes;
@@ -665,6 +700,7 @@ EipStatus HandleDataOnTcpSocket(int socket) {
 
   if (0 == number_of_read_bytes) /* got error or connection closed by client */
   {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR(
@@ -673,20 +709,23 @@ EipStatus HandleDataOnTcpSocket(int socket) {
       error_code,
       error_message);
     FreeErrorMessage(error_message);
+#endif
     RemoveSocketTimerFromList(socket);
     RemoveSession(socket);
     return kEipStatusError;
   }
   if (number_of_read_bytes < 0) {
     int error_code = GetSocketErrorNumber();
-    char *error_message = GetErrorMessage(error_code);
     if (OPENER_SOCKET_WOULD_BLOCK == error_code) {
       return kEipStatusOk;
     }
+#ifdef OPENER_WITH_TRACES
+    char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("networkhandler: error on recv: %d - %s\n",
                      error_code,
                      error_message);
     FreeErrorMessage(error_message);
+#endif
     return kEipStatusError;
   }
 
@@ -702,12 +741,14 @@ EipStatus HandleDataOnTcpSocket(int socket) {
     memset( &sender_address, 0, sizeof(sender_address) );
     socklen_t fromlen = sizeof(sender_address);
     if (getpeername(socket, (struct sockaddr *)&sender_address, &fromlen) < 0) {
+#ifdef OPENER_WITH_TRACES
       int error_code = GetSocketErrorNumber();
       char *error_message = GetErrorMessage(error_code);
       OPENER_TRACE_ERR("networkhandler: could not get peername: %d - %s\n",
                        error_code,
                        error_message);
       FreeErrorMessage(error_message);
+#endif
     }
 
     number_of_read_bytes = HandleReceivedExplictTcpData(
@@ -772,12 +813,14 @@ int CreateUdpSocket(UdpCommuncationDirection communication_direction,
   /* create a new UDP socket */
   if ( ( new_socket =
            socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == kEipInvalidSocket ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("networkhandler: cannot create UDP socket: %d- %s\n",
                      error_code,
                      error_message);
     FreeErrorMessage(error_message);
+#endif
     return new_socket;
   }
 
@@ -790,6 +833,7 @@ int CreateUdpSocket(UdpCommuncationDirection communication_direction,
   }
 
   if (SetQosOnSocket(new_socket, GetPriorityForSocket(qos_for_socket) ) <= 0) { /* got error */
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR(
@@ -797,6 +841,7 @@ int CreateUdpSocket(UdpCommuncationDirection communication_direction,
       error_code,
       error_message);
     FreeErrorMessage(error_message);
+#endif
   }
 
   OPENER_TRACE_INFO("networkhandler: UDP socket %d\n", new_socket);
@@ -816,11 +861,13 @@ int CreateUdpSocket(UdpCommuncationDirection communication_direction,
     /* bind is only for consuming necessary */
     if ( ( bind( new_socket, (struct sockaddr *) socket_data,
                  sizeof(struct sockaddr) ) ) == -1 ) {
+#ifdef OPENER_WITH_TRACES
       int error_code = GetSocketErrorNumber();
       char *error_message = GetErrorMessage(error_code);
       OPENER_TRACE_ERR("error on bind udp: %d - %s\n", error_code,
                        error_message);
       FreeErrorMessage(error_message);
+#endif
       CloseSocket(new_socket);
       return new_socket;
     }
@@ -834,12 +881,14 @@ int CreateUdpSocket(UdpCommuncationDirection communication_direction,
         if ( setsockopt(new_socket, IPPROTO_IP, IP_MULTICAST_TTL,
                         &g_time_to_live_value,
                         sizeof(g_time_to_live_value) ) < 0 ) {
+#ifdef OPENER_WITH_TRACES
           int error_code = GetSocketErrorNumber();
           char *error_message = GetErrorMessage(error_code);
           OPENER_TRACE_ERR(
             "networkhandler: could not set the TTL to: %d, error: %d - %s\n",
             g_time_to_live_value, error_code, error_message);
           FreeErrorMessage(error_message);
+#endif
           return new_socket;
         }
       }
@@ -852,12 +901,14 @@ int CreateUdpSocket(UdpCommuncationDirection communication_direction,
     if (getpeername(g_current_active_tcp_socket,
                     (struct sockaddr *) &peer_address, &peer_address_length)
         < 0) {
+#ifdef OPENER_WITH_TRACES
       int error_code = GetSocketErrorNumber();
       char *error_message = GetErrorMessage(error_code);
       OPENER_TRACE_ERR("networkhandler: could not get peername: %d - %s\n",
                        error_code,
                        error_message);
       FreeErrorMessage(error_message);
+#endif
       return new_socket;
     }
     /* store the originators address */
@@ -897,6 +948,7 @@ void CheckAndHandleConsumingUdpSockets(void) {
         g_ethernet_communication_buffer, PC_OPENER_ETHERNET_BUFFER_SIZE, 0,
         (struct sockaddr *) &from_address, &from_address_length);
       if (0 == received_size) {
+#ifdef OPENER_WITH_TRACES
         int error_code = GetSocketErrorNumber();
         char *error_message = GetErrorMessage(error_code);
         OPENER_TRACE_ERR(
@@ -906,6 +958,7 @@ void CheckAndHandleConsumingUdpSockets(void) {
           error_code,
           error_message);
         FreeErrorMessage(error_message);
+#endif
         current_connection_object->connection_close_function(
           current_connection_object);
         continue;
@@ -914,14 +967,16 @@ void CheckAndHandleConsumingUdpSockets(void) {
 
       if (0 > received_size) {
         int error_code = GetSocketErrorNumber();
-        char *error_message = GetErrorMessage(error_code);
         if (OPENER_SOCKET_WOULD_BLOCK == error_code) {
           return;       // No fatal error, resume execution
         }
+#ifdef OPENER_WITH_TRACES
+        char *error_message = GetErrorMessage(error_code);
         OPENER_TRACE_ERR("networkhandler: error on recv: %d - %s\n",
                          error_code,
                          error_message);
         FreeErrorMessage(error_message);
+#endif
         current_connection_object->connection_close_function(
           current_connection_object);
         continue;

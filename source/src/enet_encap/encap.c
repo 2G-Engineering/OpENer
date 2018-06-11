@@ -745,6 +745,7 @@ void CloseEncapsulationSessionBySockAddr(
       socklen_t addrlength = sizeof(encapsulation_session_addr);
       if (getpeername(g_registered_sessions[i], &encapsulation_session_addr,
                       &addrlength) <= 0) {                                                                  /* got error */
+#ifdef OPENER_WITH_TRACES
         int error_code = GetSocketErrorNumber();
         char *error_message = GetErrorMessage(error_code);
         OPENER_TRACE_ERR(
@@ -752,6 +753,7 @@ void CloseEncapsulationSessionBySockAddr(
           error_code,
           error_message);
         FreeErrorMessage(error_message);
+#endif
       }
       if(encapsulation_session_addr.sin_addr.s_addr ==
          connection_object->originator_address.sin_addr.s_addr) {

@@ -36,6 +36,7 @@ EipStatus NetworkHandlerInitializePlatform(void) {
 
 void CloseSocketPlatform(int socket_handle) {
   if(0 != shutdown(socket_handle, SHUT_RDWR) ) {
+#ifdef OPENER_WITH_TRACES
     int error_code = GetSocketErrorNumber();
     char *error_message = GetErrorMessage(error_code);
     OPENER_TRACE_ERR("Could not close socket %d - Error Code: %d - %s\n",
@@ -43,6 +44,7 @@ void CloseSocketPlatform(int socket_handle) {
                      error_code,
                      error_message);
     FreeErrorMessage(error_message);
+#endif
   }
   close(socket_handle);
 }
