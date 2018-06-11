@@ -93,7 +93,8 @@ typedef unsigned long long MicroSeconds;
 typedef enum {
   kEipStatusOk = 0, /**< Stack is ok */
   kEipStatusOkSend = 1, /**< Stack is ok, after send */
-  kEipStatusError = -1 /**< Stack is in error */
+  kEipStatusError = -1, /**< Stack is in error */
+  kEipStatusPadTo32Bits = 100000, /** Force the enum to 32 bits width*/
 } EipStatus;
 
 /** @brief Communication direction of an UDP socket; consuming is receiver,
