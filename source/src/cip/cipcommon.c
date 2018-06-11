@@ -257,9 +257,6 @@ CipClass *CreateCipClass( const EipUint32 class_id,
     return 0; /*TODO handle return value and clean up if necessary*/
   }
 
-  AllocateAttributeMasks(meta_class); /* Allocation of bitmasks for Class Attributes */
-  AllocateAttributeMasks(class); /* Allocation of bitmasks for Instance Attributes */
-
   if (InitializeCipClass == NULL) {
     InsertAttribute( (CipInstance *) class, 1, kCipUint,
                      (void *) &class->revision, kGetableSingleAndAll ); /* revision */
@@ -314,15 +311,6 @@ void InsertAttribute(CipInstance *const instance,
       attribute->data = data;
 
       OPENER_ASSERT(attribute_number <= class->highest_attribute_number);
-
-      size_t index = CalculateIndex(attribute_number);
-
-      class->get_single_bit_mask[index] |=
-        (cip_flags & kGetableSingle) ? 1 << (attribute_number) % 8 : 0;
-      class->get_all_bit_mask[index] |=
-        (cip_flags & kGetableAll) ? 1 << (attribute_number) % 8 : 0;
-      class->set_bit_mask[index] |= ( (cip_flags & kSetable) ? 1 : 0 )
-                                    << ( (attribute_number) % 8 );
 
       return;
     }
@@ -403,17 +391,14 @@ EipStatus GetAttributeSingle(
                                .attribute_number;
 
   if ( (NULL != attribute) && (NULL != attribute->data) ) {
-    uint8_t get_bit_mask = 0;
+    CIPAttributeFlag get_bit_mask = 0;
     if (kGetAttributeAll == message_router_request->service) {
-      get_bit_mask = (instance->cip_class->get_all_bit_mask[CalculateIndex(
-                                                              attribute_number)]);
+      get_bit_mask = attribute->attribute_flags & kGetableAll;
       message_router_response->general_status = kCipErrorSuccess;
     } else {
-      get_bit_mask = (instance->cip_class->get_single_bit_mask[CalculateIndex(
-                                                                 attribute_number)
-                      ]);
+      get_bit_mask = attribute->attribute_flags & kGetableSingle;
     }
-    if ( 0 != ( get_bit_mask & ( 1 << (attribute_number % 8) ) ) ) {
+    if (0 != get_bit_mask) {
       OPENER_TRACE_INFO("getAttribute %d\n",
                         message_router_request->request_path.attribute_number); /* create a reply message containing the data*/
 
@@ -708,23 +693,23 @@ EipStatus GetAttributeAll(CipInstance *instance,
       } else {
         for (int j = 0; j < instance->cip_class->number_of_attributes; j++) /* for each instance attribute of this class */
         {
-          int attrNum = attribute->attribute_number;
-          if ( attrNum < 32
-               && ( (instance->cip_class->get_all_bit_mask[CalculateIndex(
-                                                             attrNum)])
-                    & ( 1 << (attrNum % 8) ) ) ) /* only return attributes that are flagged as being part of GetAttributeALl */
-          {
-            message_router_request->request_path.attribute_number = attrNum;
-            if ( kEipStatusOkSend
-                 != service->service_function(instance, message_router_request,
-                                              message_router_response,
-                                              originator_address,
-                                              encapsulation_session) ) {
-              message_router_response->data = reply;
-              return kEipStatusError;
-            }
-            message_router_response->data += message_router_response
-                                             ->data_length;
+          if (NULL != attribute) {
+              int attrNum = attribute->attribute_number;
+              if (attrNum < 32
+                  && (attribute->attribute_flags & kGetableAll))            /* only return attributes that are flagged as being part of GetAttributeALl */
+              {
+                message_router_request->request_path.attribute_number = attrNum;
+                if ( kEipStatusOkSend
+                     != service->service_function(instance, message_router_request,
+                                                  message_router_response,
+                                                  originator_address,
+                                                  encapsulation_session) ) {
+                  message_router_response->data = reply;
+                  return kEipStatusError;
+                }
+                message_router_response->data += message_router_response
+                                                 ->data_length;
+              }
           }
           attribute++;
         }
@@ -866,20 +851,6 @@ int DecodePaddedEPath(CipEpath *epath,
 
   *message = message_runner;
   return number_of_decoded_elements * 2 + 1; /* number_of_decoded_elements times 2 as every encoding uses 2 bytes */
-}
-
-void AllocateAttributeMasks(CipClass *target_class) {
-  size_t size = 1 + CalculateIndex(target_class->highest_attribute_number);
-  OPENER_TRACE_INFO(">>> Allocate memory for %s %lu bytes times 3 for masks\n",
-                    target_class->class_name, size);
-  target_class->get_single_bit_mask = CipCalloc( size, sizeof(uint8_t) );
-  target_class->set_bit_mask = CipCalloc( size, sizeof(uint8_t) );
-  target_class->get_all_bit_mask = CipCalloc( size, sizeof(uint8_t) );
-}
-
-size_t CalculateIndex(EipUint16 attribute_number) {
-  size_t index = attribute_number / 8;
-  return index;
 }
 
 size_t GetSizeOfAttribute(const CipAttributeStruct *const attribute_struct) {

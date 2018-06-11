@@ -50,30 +50,32 @@ EipStatus SetAttributeSingleQoS(
   (void) instance;   /*Suppress compiler warning */
   EipUint16 attribute_number =
     message_router_request->request_path.attribute_number;
-  uint8_t set_bit_mask = (instance->cip_class->set_bit_mask[CalculateIndex(
-                                                              attribute_number)
-                          ]);
+  if(NULL != attribute) {
+    CIPAttributeFlag set_bit_mask = attribute->attribute_flags & kSetable;
 
-  if( NULL != attribute &&
-      ( set_bit_mask & ( 1 << ( (attribute_number) % 8 ) ) ) ) {
-    CipUint attribute_value_recieved = GetDintFromMessage(
-      &(message_router_request->data) );
+    if( set_bit_mask ) {
+      CipUint attribute_value_recieved = GetDintFromMessage(
+        &(message_router_request->data) );
 
-    if( !( (attribute_value_recieved <= 0) ||
-           (attribute_value_recieved >= 63) ) ) {
-      OPENER_TRACE_INFO(" setAttribute %d\n", attribute_number);
+      if( !( (attribute_value_recieved <= 0) ||
+             (attribute_value_recieved >= 63) ) ) {
+        OPENER_TRACE_INFO(" setAttribute %d\n", attribute_number);
 
-      if(NULL != attribute->data) {
-        CipUsint *data = (CipUsint *) attribute->data;
-        *(data) = attribute_value_recieved;
+        if(NULL != attribute->data) {
+          CipUsint *data = (CipUsint *) attribute->data;
+          *(data) = attribute_value_recieved;
 
-        message_router_response->general_status = kCipErrorSuccess;
+          message_router_response->general_status = kCipErrorSuccess;
+        } else {
+          message_router_response->general_status = kCipErrorNotEnoughData;
+          OPENER_TRACE_INFO("CIP QoS not enough data\n");
+        }
       } else {
-        message_router_response->general_status = kCipErrorNotEnoughData;
-        OPENER_TRACE_INFO("CIP QoS not enough data\n");
+        message_router_response->general_status = kCipErrorInvalidAttributeValue;
       }
     } else {
-      message_router_response->general_status = kCipErrorInvalidAttributeValue;
+      /* attribute is not setable */
+      message_router_response->general_status = kCipErrorAttributeNotSetable;
     }
   } else {
     /* we don't have this attribute */

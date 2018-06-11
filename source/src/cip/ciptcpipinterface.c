@@ -90,10 +90,8 @@ EipStatus SetAttributeSingleTcp(
                                .attribute_number;
 
   if (NULL != attribute) {
-    uint8_t set_bit_mask = (instance->cip_class->set_bit_mask[CalculateIndex(
-                                                                attribute_number)
-                            ]);
-    if ( set_bit_mask & ( 1 << ( (attribute_number) % 8 ) ) ) {
+    CIPAttributeFlag set_bit_mask = attribute->attribute_flags & kSetable;
+    if ( set_bit_mask ) {
       switch (attribute_number) {
         case 3: {
           CipUint configuration_control_recieved = GetDintFromMessage(
@@ -242,22 +240,23 @@ EipStatus GetAttributeSingleTcpIpInterface(
 
   EipUint16 attribute_number = message_router_request->request_path
                                .attribute_number;
-  uint8_t get_bit_mask = 0;
+  CIPAttributeFlag get_bit_mask = 0;
 
   message_router_response->general_status = kCipErrorAttributeNotSupported;
 
+  CipAttributeStruct *attribute = GetCipAttribute(instance, attribute_number);
+
   if (9 == message_router_request->request_path.attribute_number) { /* attribute 9 can not be easily handled with the default mechanism therefore we will do it by hand */
-    if (kGetAttributeAll == message_router_request->service) {
-      get_bit_mask = (instance->cip_class->get_all_bit_mask[CalculateIndex(
-                                                              attribute_number)]);
-      message_router_response->general_status = kCipErrorSuccess;
-    } else {
-      get_bit_mask = (instance->cip_class->get_single_bit_mask[CalculateIndex(
-                                                                 attribute_number)
-                      ]);
+    if (NULL != attribute) {
+      if (kGetAttributeAll == message_router_request->service) {
+        get_bit_mask = attribute->attribute_flags & kGetableAll;
+        message_router_response->general_status = kCipErrorSuccess;
+      } else {
+        get_bit_mask = attribute->attribute_flags & kGetableSingle;
+      }
     }
 
-    if ( 0 == ( get_bit_mask & ( 1 << (attribute_number % 8) ) ) ) {
+    if ( 0 == ( get_bit_mask ) ) {
       return kEipStatusOkSend;
     }
     message_router_response->general_status = kCipErrorSuccess;
@@ -279,7 +278,6 @@ EipStatus GetAttributeSingleTcpIpInterface(
                                                        &multicast_address,
                                                        &message);
   } else {
-    CipAttributeStruct *attribute = GetCipAttribute(instance, attribute_number);
 
     if ( (NULL != attribute) && ( NULL != attribute->data) ) {
 
@@ -287,17 +285,13 @@ EipStatus GetAttributeSingleTcpIpInterface(
                         message_router_request->request_path.attribute_number); /* create a reply message containing the data*/
 
       if (kGetAttributeAll == message_router_request->service) {
-        get_bit_mask = (instance->cip_class->get_all_bit_mask[CalculateIndex(
-                                                                attribute_number)
-                        ]);
+        get_bit_mask = attribute->attribute_flags & kGetableAll;
         message_router_response->general_status = kCipErrorSuccess;
       } else {
-        get_bit_mask = (instance->cip_class->get_single_bit_mask[CalculateIndex(
-                                                                   attribute_number)
-                        ]);
+        get_bit_mask = attribute->attribute_flags & kGetableSingle;
       }
 
-      if ( 0 == ( get_bit_mask & ( 1 << ( (attribute_number) % 8 ) ) ) ) {
+      if ( 0 == ( get_bit_mask ) ) {
         return kEipStatusOkSend;
       }
 

@@ -194,18 +194,15 @@ EipStatus GetAttributeSingleEthernetLink(
                                .attribute_number;
 
   if ( (NULL != attribute) && (NULL != attribute->data) ) {
-    uint8_t get_bit_mask = 0;
+    CIPAttributeFlag get_bit_mask = 0;
     if (kGetAttributeAll == message_router_request->service) {
-      get_bit_mask = (instance->cip_class->get_all_bit_mask[CalculateIndex(
-                                                              attribute_number)]);
+      get_bit_mask = (attribute->attribute_flags & kGetableAll);
       message_router_response->general_status = kCipErrorSuccess;
     } else {
-      get_bit_mask = (instance->cip_class->get_single_bit_mask[CalculateIndex(
-                                                                 attribute_number)
-                      ]);
+      get_bit_mask = (attribute->attribute_flags & kGetableSingle);
     }
-    if ( 0 != ( get_bit_mask & ( 1 << (attribute_number % 8) ) ) ) {
-      OPENER_TRACE_INFO("getAttribute %d\n",
+    if ( 0 != ( get_bit_mask ) ) {
+      OPENER_TRACE_INFO("getAttribute enLink %d\n",
                         message_router_request->request_path.attribute_number); /* create a reply message containing the data*/
 
       switch (attribute_number) {

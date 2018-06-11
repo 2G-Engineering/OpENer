@@ -216,21 +216,6 @@ void InsertAttribute(CipInstance *const cip_instance,
                      const EipUint8 cip_data_type,
                      void *const cip_data,
                      const EipByte cip_flags);
-/** @ingroup CIP_API
- * @brief Allocates Attribute bitmasks
- *
- * @param target_class Class, in which the bitmasks will be inserted.
- *
- */
-void AllocateAttributeMasks(CipClass *target_class);
-
-/** @ingroup CIP_API
- * @brief Calculates Byte-Index of Attribute
- *
- * @param attribute_number Attribute number.
- *
- */
-size_t CalculateIndex(EipUint16 attribute_number);
 
 /** @ingroup CIP_API
  * @brief Insert a service in an instance of a CIP object
