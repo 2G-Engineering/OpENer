@@ -445,7 +445,7 @@ EipStatus setIPv4(CipUdint ip,
   const char *name = "eth1";
   int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 
-  strncpy(ifr.ifr_name, name, 4);
+  strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name);
 
   ifr.ifr_addr.sa_family = AF_INET;
 
