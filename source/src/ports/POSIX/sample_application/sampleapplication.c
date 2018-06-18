@@ -142,6 +142,13 @@ CipCalloc(size_t number_of_elements,
 }
 
 void CipFree(void *data) {
+    #ifdef OPENER_CIP_CONST_OBJECTS
+  //Avoid freeing objects that are stored in constant storage
+  //This may not be the most optimal solution
+  if ((data >= OPENER_CIP_CONST_DATA_START) && (data <= OPENER_CIP_CONST_DATA_END)) {
+    return;
+  }
+#endif
   free(data);
 }
 

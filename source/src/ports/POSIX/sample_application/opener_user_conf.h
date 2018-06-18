@@ -99,6 +99,16 @@ static const int kOpenerConsumedDataHasRunIdleHeader = 1;
  */
 static const int kOpenerProducedDataHasRunIdleHeader = 0;
 
+/** @brief indicates that this OPENER instance can use constant objects
+ *
+ */
+#define OPENER_CIP_CONST_OBJECTS 1
+/** @brief Indicates the start and end addresses where const objects will be found (e.g. the start and end of flash memory or ROM in a microcontroller)
+ * 
+ */
+#define OPENER_CIP_CONST_DATA_START ((void*) 0x00000000)
+#define OPENER_CIP_CONST_DATA_END   ((void*) 0x00080000)
+
 /** @brief Define in order to define the CIP identity object as a const struct
  * rather than as a normal CIP object in RAM.
  *
@@ -106,8 +116,9 @@ static const int kOpenerProducedDataHasRunIdleHeader = 0;
  * in small systems.
  *
  */
-
+#ifdef OPENER_CIP_CONST_OBJECTS
 //#define OPENER_CIP_CONST_IDENTITY 1
+#endif
 
 #ifdef OPENER_WITH_TRACES
 /* If we have tracing enabled provide print tracing macro */
